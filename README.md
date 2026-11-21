@@ -1,5 +1,7 @@
 # Вершина
 
+[Повний паспорт продукту й проєкту та інструкції керування](docs/PASSPORT.md).
+
 Персональний гейміфікований трекер: проєкти, задачі, підкроки, XP, нагороди, таймер, архів та кошик.
 
 Статичний HTML/CSS/JavaScript. Немає залежності від ChatGPT чи платних API.
@@ -8,7 +10,7 @@
 
 Settings → Pages → Source: GitHub Actions. Workflow `.github/workflows/pages.yml` перевіряє код і публікує `dist/`.
 
-Очікувана адреса після успішної публікації: https://akara-center.github.io/vershyna/.
+Опублікований застосунок: https://akara-center.github.io/vershyna/.
 
 ## Особисті дані
 
