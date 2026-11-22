@@ -3,7 +3,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { execFileSync } = require("node:child_process");
 const root = path.resolve(__dirname, "..");
-const ref = process.argv[2] || "origin/backup/pre-cleanup-2026-11-22";
+const ref = process.argv[2] || "origin/backup/pre-structure-2026-11-22";
 const out = path.join(root, ".browser-check");
 const files = execFileSync("git", ["ls-tree", "-r", "--name-only", ref, "--", "dist/"], {
   cwd: root,

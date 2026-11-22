@@ -74,11 +74,11 @@
   };
   const results = [];
   const frames = document.querySelector("#frames");
-  async function loadPair(width, light) {
+  async function loadPair(width, light, seed = fixture) {
     frames.innerHTML = "";
     const pair = [];
     for (const version of ["baseline", "candidate"]) {
-      localStorage.setItem("summit-v1", JSON.stringify(fixture));
+      localStorage.setItem("summit-v1", JSON.stringify(seed));
       localStorage.setItem("summit-v1-github-backup-reset-v1", "1");
       const col = document.createElement("div");
       col.innerHTML =
@@ -93,6 +93,7 @@
       });
       const d = f.contentDocument;
       await d.fonts.ready;
+      assert(!d.querySelector("#toast").textContent.startsWith("Не вдалося"), "Fixture failed startup: " + d.querySelector("#toast").textContent);
       d.body.classList.toggle("light", light);
       const style = d.createElement("style");
       style.textContent =
@@ -105,6 +106,8 @@
   function view(f) {
     const w = f.contentWindow,
       d = f.contentDocument;
+    // Each iframe must be active when comparing :focus-visible styles.
+    w.focus();
     return {
       text: d.body.innerText.replace(/\s+/g, " ").trim(),
       nodes: [...d.body.querySelectorAll("*")]
@@ -117,19 +120,8 @@
             id: e.id,
             cl: e.getAttribute("class"),
             r: [r.x, r.y, r.width, r.height].map((n) => Math.round(n * 100) / 100),
-            css: [
-              s.display,
-              s.color,
-              s.backgroundColor,
-              s.fontFamily,
-              s.fontSize,
-              s.fontWeight,
-              s.lineHeight,
-              s.gridTemplateColumns,
-              s.padding,
-              s.margin,
-              s.overflowX,
-            ],
+            value: ["INPUT", "TEXTAREA", "SELECT"].includes(e.tagName) ? e.value : null,
+            css: [...s].map((name) => [name, s.getPropertyValue(name)]),
           };
         }),
     };
@@ -193,11 +185,11 @@
     click(f, '[data-edit="next"]');
     assert(!d.querySelector("#deleteStep"), "Delete still in editor");
     outside(f);
-    click(f, '#startTimer');
-    assert(d.querySelector('#startTimer').textContent === 'Пауза', 'Timer did not start');
-    assert(d.querySelector('#xp').textContent === '25 / 200 XP', 'Timer awarded XP');
-    click(f, '#startTimer');
-    assert(d.querySelector('#startTimer').textContent === 'Почати сет', 'Timer did not pause');
+    click(f, "#startTimer");
+    assert(d.querySelector("#startTimer").textContent === "Пауза", "Timer did not start");
+    assert(d.querySelector("#xp").textContent === "25 / 200 XP", "Timer awarded XP");
+    click(f, "#startTimer");
+    assert(d.querySelector("#startTimer").textContent === "Почати сет", "Timer did not pause");
     click(f, '[data-toggle="next"]');
     assert(d.querySelector("#xp").textContent === "50 / 200 XP", "Incorrect XP after toggle");
     click(f, '[data-toggle="next"]');
@@ -275,6 +267,44 @@
             }
           }
         }
+      const completed = structuredClone(fixture);
+      completed.missions[0].steps[0].children.forEach((s) => (s.done = true));
+      const course = structuredClone(fixture);
+      course.missions[0].steps[0].kind = "course";
+      course.missions[0].steps[0].children[1] = {
+        id: "lecture",
+        name: "Лекція з вкладеними діями",
+        result: "Вивчено",
+        kind: "lecture",
+        done: false,
+        xp: 25,
+        minutes: 10,
+        children: [
+          {
+            id: "watch",
+            name: "Переглянути <лекцію> & нотатки",
+            result: "Готово",
+            xp: 13,
+            minutes: 10,
+            done: false,
+          },
+          { id: "notes", name: "Нотатки", result: "Готово", xp: 12, minutes: 10, done: false },
+        ],
+      };
+      const archived = structuredClone(fixture);
+      archived.missions[0].archived = true;
+      for (const [label, seed] of [
+        ["empty", { schemaVersion: 4, theme: "dark", active: null, missions: [] }],
+        ["complete", completed],
+        ["course", course],
+        ["archived", archived],
+      ]) {
+        for (const width of [390, 1280])
+          for (const light of [false, true]) {
+            const [a, b] = await loadPair(width, light, seed);
+            compare(a, b, label + " " + width + " " + (light ? "light" : "dark"));
+          }
+      }
       for (const version of ["baseline", "candidate"]) {
         const pair = await loadPair(390, false);
         await behavior(pair[version === "baseline" ? 0 : 1]);

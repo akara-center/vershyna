@@ -1,5 +1,5 @@
-
 @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap') ;
+/* Foundation: tokens, base controls and page layout */
 :root {
   color-scheme: dark;
   --bg: #11121d;
@@ -10,6 +10,8 @@
   --purple: #b6a0ff;
   --gold: #f1ca81;
   --soft: #242437;
+  --project: var(--gold);
+  --completed: #9695ab;
 }
 * {
   box-sizing: border-box;
@@ -138,13 +140,10 @@ p {
 }
 .mission-tabs button {
   background: transparent;
-  color: var(--muted);
   text-align: left;
 }
 .mission-tabs button.active {
   background: #312a49;
-  color: var(--ink);
-  border-color: #7e68ac;
 }
 .mission-tabs span {
   display: block;
@@ -259,16 +258,13 @@ h2 {
   font-size: 14px;
   margin: 0;
 }
+/* Task tree: base layout */
 .steps {
   list-style: none;
   padding: 0;
   margin: 0;
 }
 .step {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 15px 0;
   border-bottom: 1px solid var(--line);
 }
 .step:last-child {
@@ -293,11 +289,7 @@ h2 {
 .step-info {
   flex: 1;
 }
-.step-name {
-  font-size: 13px;
-}
 .step-meta {
-  font-size: 10px;
   color: var(--muted);
   margin-top: 5px;
 }
@@ -307,6 +299,7 @@ h2 {
   background: transparent;
   color: var(--muted);
 }
+/* Hero, progress and rewards */
 aside {
   display: flex;
   flex-direction: column;
@@ -363,7 +356,6 @@ aside {
   margin: 17px 0;
 }
 .artifact {
-  flex: 1;
   text-align: center;
   border: 1px solid var(--line);
   padding: 12px 5px;
@@ -405,6 +397,7 @@ aside {
   margin-top: 22px;
   line-height: 1.7;
 }
+/* Dialogs, forms, toast and celebration */
 dialog {
   background: var(--card);
   color: var(--ink);
@@ -467,7 +460,6 @@ textarea {
   width: 9px;
   height: 14px;
   pointer-events: none;
-  animation: fall 1.8s ease-in forwards;
   z-index: 30;
 }
 @keyframes fall {
@@ -479,15 +471,6 @@ textarea {
 .hidden {
   display: none!important;
 }
-body.light {
-  color-scheme: light;
-  --bg: #f3f0f7;
-  --card: #fff;
-  --muted: #70687e;
-  --ink: #292238;
-  --line: #e3ddec;
-  --soft: #f1ecf7;
-}
 body.light .hero-card {
   background: radial-gradient(ellipse at 50% 33%,#e5d9f6,#fff 70%);
 }
@@ -496,10 +479,6 @@ body.light .next {
 }
 body.light .next p {
   color: #665a79;
-}
-body.light .mission-tabs button.active {
-  background: #ede4f8;
-  color: #342847;
 }
 body.light .quote {
   color: #59466d;
@@ -527,9 +506,6 @@ body.light .timerline select {
   aside {
     display: grid;
     grid-template-columns: 1fr;
-  }
-  .hero-card svg {
-    height: 180px;
   }
   .intro {
     align-items: start;
@@ -593,6 +569,7 @@ body.light .timerline select {
   min-width: 0;
   overflow-wrap: anywhere;
 }
+/* Task controls, nesting and data forms */
 .step-tools {
   display: flex;
   align-items: center;
@@ -641,9 +618,6 @@ button:disabled {
   .step-tools button {
     min-width: 44px;
     min-height: 44px;
-  }
-  .step-tools .copy-step {
-    padding: 6px 12px;
   }
   .hero-card svg {
     height: 220px;
@@ -704,7 +678,6 @@ select {
 }
 .file-input {
   padding: 10px;
-  font-size: 12px;
 }
 .inline-error {
   color: #ffb0a8;
@@ -798,14 +771,19 @@ details summary {
   display: none!important;
 }
 /* Clear hierarchy: project numbers, then diamond / circle / dash. */
-:root {
-  --project: var(--gold);
-  --completed: #9695ab;
-}
+/* Light theme tokens */
 body.light {
+  color-scheme: light;
+  --bg: #f3f0f7;
+  --card: #fff;
+  --muted: #70687e;
+  --ink: #292238;
+  --line: #e3ddec;
+  --soft: #f1ecf7;
   --project: #805300;
   --completed: #70687e;
 }
+/* Hierarchy and completed states */
 .mission-top h2 {
   color: var(--project);
   font-size: 25px;
@@ -824,6 +802,7 @@ body.light {
   border-color: var(--project);
 }
 body.light .mission-tabs button.active {
+  background: #ede4f8;
   color: var(--project);
 }
 .mission-tabs button.completed-mission,.mission-complete .mission-top h2 {
@@ -857,13 +836,12 @@ body.light .mission-tabs button.active {
   grid-row: 1;
   padding-top: 8px;
 }
+/* Task command layout */
 .step>.step-tools {
-  grid-column: 2;
   grid-row: 2;
   justify-content: flex-start;
   width: 100%;
   align-items: start;
-  gap: 8px;
   min-width: 0;
 }
 .step>.group-progress {
@@ -900,10 +878,6 @@ body.light .mission-tabs button.active {
   font-size: 12px;
   line-height: 1.5;
 }
-.step>.step-tools button {
-  font-size: 12px;
-  min-height: 44px;
-}
 .step.done>.step-info>.step-name,.step.done>.step-info>.step-meta,.step.done>.step-info>.course-award {
   color: var(--completed);
   text-decoration: none;
@@ -929,7 +903,6 @@ body.light .mission-tabs button.active {
 }
 .task-menu {
   max-width: 100%;
-  min-width: 0;
 }
 .task-menu>summary {
   display: inline-flex;
@@ -1071,6 +1044,7 @@ body.light .artifact.locked {
 .step-tools:not(:has(.focus-step)) .task-menu {
   grid-column: 4;
 }
+/* Archive */
 .archive-item {
   padding: 12px 0;
   border-bottom: 1px solid var(--line);
@@ -1124,6 +1098,7 @@ body.light #auraRays {
 body.light #auraSparks {
   fill: #99621e;
 }
+/* Project celebration */
 .victory-scene {
   position: fixed;
   inset: 0;

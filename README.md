@@ -22,12 +22,14 @@ Settings → Pages → Source: GitHub Actions. Workflow `.github/workflows/pages
 
 - dist/index.html — HTML-каркас і підключення.
 - dist/styles.css — стилі, адаптивність і теми.
-- dist/app.js — інтерфейс, збереження, імпорт і копії.
+- dist/app.js — запуск і події; окремі файли відповідають за стан, UI, таймер, задачі, форми й дані.
+- dist/templates.js — читабельні HTML/SVG-фрагменти.
+- [Карта файлів і залежностей](docs/ARCHITECTURE.md).
 - dist/quest-core.js — дерево, прогрес, XP, архів і кошик.
 - dist/initial.js — порожній початковий стан і підтримка старих форматів.
 - tests — регресійні перевірки.
 
-Запуск: `node --test tests/*.test.cjs`. Локальний перегляд: `python3 -m http.server 8000 --directory dist`.
+Перевірка синтаксису: `node scripts/check-syntax.cjs`. Тести: `node --test tests/*.test.cjs`. Локальний перегляд: `python3 -m http.server 8000 --directory dist`.
 
 ## Резервні копії
 
@@ -38,4 +40,4 @@ Settings → Pages → Source: GitHub Actions. Workflow `.github/workflows/pages
 ## База для подальшої розробки
 
 [Зафіксований етап, перевірки й відтворення браузерного порівняння](docs/BASELINE.md).
-CSS винесено в окремий файл зі збереженням каскаду; JS відформатовано без зміни логіки.
+HTML-шаблони винесено у функції, JS розділено за відповідальністю, зайві CSS-декларації прибрано з перевіркою вигляду й поведінки.
