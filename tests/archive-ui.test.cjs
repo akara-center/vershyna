@@ -4,7 +4,7 @@ const fixture={schemaVersion:4,active:'m',missions:[{id:'m',name:'m',goal:'m',st
 const data=new Map([['summit-v1',JSON.stringify(fixture)]]), elements=new Map();
 function el(){return {textContent:'',innerHTML:'',style:{},classList:{add(){},remove(){},toggle(){}},setAttribute(){},remove(){},close(){},showModal(){}};}
 const ctx={matchMedia:()=>({matches:true}),QuestCore:Q,structuredClone,console,crypto,Date,setTimeout:()=>0,clearTimeout,clearInterval,confirm:()=>true,localStorage:{getItem:k=>data.get(k)||null,removeItem:k=>data.delete(k),setItem:(k,v)=>data.set(k,v)},document:{body:{classList:{toggle(){}}},querySelector:s=>{if(!elements.has(s))elements.set(s,el());return elements.get(s);},querySelectorAll:()=>[]}};
-vm.createContext(ctx);vm.runInContext(fs.readFileSync('dist/initial.js','utf8')+'\n'+fs.readFileSync('dist/app.js','utf8'),ctx);
+vm.createContext(ctx);vm.runInContext(require('./helpers/app-source.cjs')(),ctx);
 const run=s=>vm.runInContext(s,ctx);
 run('archiveProject("m")');assert.equal(run('totalXP()'),100);assert.equal(run('mission()'),undefined);assert.ok(!elements.get('#tabs').innerHTML.includes('data-mission="m"'));assert.match(elements.get('#mission').innerHTML,/Немає активних/);
 assert.equal(JSON.parse(data.get('summit-v1')).missions[0].archived,true);

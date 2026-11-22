@@ -2,7 +2,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('nod
 require('../dist/quest-core.js');const Q=QuestCore;
 const fixture={schemaVersion:4,theme:'dark',active:'m',missions:[{id:'m',name:'Test',goal:'Test',steps:[{id:'s',name:'Step',result:'Result',minutes:10,xp:50,done:true}]}]};
 const raw=JSON.stringify(fixture),oldKeys=['-before-import','-before-v4','-before-ui-upgrade','-before-transfer','-before-project-change'];
-const code=fs.readFileSync('dist/initial.js','utf8')+'\n'+fs.readFileSync('dist/app.js','utf8');
+const code=require('./helpers/app-source.cjs')();
 function start(failKey){
  const data=new Map([['summit-v1',raw],...oldKeys.map(k=>['summit-v1'+k,raw])]),els=new Map();
  const ctx={QuestCore:Q,structuredClone,console,crypto,Date,setTimeout:()=>0,clearTimeout,clearInterval,localStorage:{getItem:k=>data.get(k)||null,removeItem:k=>data.delete(k),setItem:(k,v)=>{if(k===failKey)throw Error('quota');data.set(k,v);}},document:{body:{classList:{toggle(){}}},querySelector:s=>{if(!els.has(s))els.set(s,{innerHTML:'',textContent:'',style:{},classList:{add(){},remove(){},toggle(){}},setAttribute(){},remove(){}});return els.get(s);},querySelectorAll:()=>[]}};

@@ -229,8 +229,7 @@ function celebrateProject() {
   scene.className = "victory-scene";
   scene.setAttribute("role", "status");
   scene.setAttribute("aria-label", "Святкування завершення проєкту");
-  scene.innerHTML =
-    '<div class="victory-aura"></div><svg class="victory-dancer" viewBox="0 0 120 160" aria-hidden="true"><g class="dance-body" fill="currentColor"><circle cx="60" cy="30" r="14"/><path d="M49 49Q60 43 71 49L76 95Q60 104 44 95Z"/><g class="dance-left"><path d="M50 53L30 70 17 44" fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round"/></g><g class="dance-right"><path d="M70 53L88 66 103 39" fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round"/></g><path d="M52 96L41 120 29 137" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round" class="dance-leg-left"/><path class="dance-leg-right" d="M67 96L78 120 92 137" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round"/></g></svg>';
+  scene.innerHTML = Templates.victoryDancer();
   for (let i = 0; i < 16; i++) {
     const star = document.createElement("span");
     star.className = "victory-star";
@@ -349,7 +348,27 @@ function tools(node, index, length, depth) {
   const focus = !Q.isDone(node)
     ? `<button class="icon copy-step focus-step" data-focus="${esc(node.id)}">Взяти в роботу</button>`
     : "";
-  return `<div class="step-tools">${focus}${depth < 6 ? `<button class="icon copy-step child-step" data-child="${esc(node.id)}">＋ Підкрок</button>` : ""}<button class="icon order-step" data-move="${esc(node.id)}" data-direction="-1" ${index === 0 ? "disabled" : ""} aria-label="Підняти крок: ${esc(node.name)}">↑</button><button class="icon order-step" data-move="${esc(node.id)}" data-direction="1" ${index === length - 1 ? "disabled" : ""} aria-label="Опустити крок: ${esc(node.name)}">↓</button><div class="task-menu"><button class="ghost small" data-menu="${esc(node.id)}" aria-label="Дії з кроком: ${esc(node.name)}" aria-expanded="false">⋯</button><div class="task-actions" hidden><button class="icon copy-step" data-transfer="${esc(node.id)}">Перемістити</button><button class="icon copy-step" data-copy="${esc(node.id)}">Копія</button><button class="icon copy-step" data-edit="${esc(node.id)}" aria-label="Редагувати крок: ${esc(node.name)}">Редагувати ✎</button><button class="icon copy-step" data-delete="${esc(node.id)}" aria-label="Видалити крок: ${esc(node.name)}">Видалити</button></div></div></div>`;
+  return Templates.taskTools({
+    focusButton: focus,
+    childButton:
+      depth < 6
+        ? `<button class="icon copy-step child-step" data-child="${esc(node.id)}">＋ Підкрок</button>`
+        : "",
+    upId: esc(node.id),
+    upDisabled: index === 0 ? "disabled" : "",
+    upLabel: esc(node.name),
+    downId: esc(node.id),
+    downDisabled: index === length - 1 ? "disabled" : "",
+    downLabel: esc(node.name),
+    menuId: esc(node.id),
+    menuLabel: esc(node.name),
+    transferId: esc(node.id),
+    copyId: esc(node.id),
+    editId: esc(node.id),
+    editLabel: esc(node.name),
+    deleteId: esc(node.id),
+    deleteLabel: esc(node.name),
+  });
 }
 function renderSteps(steps, depth = 0) {
   return Q.ordered(steps)
@@ -359,7 +378,39 @@ function renderSteps(steps, depth = 0) {
         items = Q.leaves(node),
         done = items.filter((s) => s.done).length,
         symbol = ["◇", "○", "—"][Math.min(depth, 2)];
-      return `<li class="step depth-${Math.min(depth, 3)} ${Q.isDone(node) ? "done" : ""} ${group ? "step-group" : ""}" data-step-id="${esc(node.id)}" data-depth="${depth}">${group ? `<button class="check marker" data-finalize="${esc(node.id)}" aria-pressed="${node.finalized === true}" aria-label="${node.finalized ? "Скасувати остаточне завершення" : "Остаточно завершити задачу"}: ${esc(node.name)}">${node.finalized ? "✓" : symbol}</button>` : `<button class="check marker" data-toggle="${esc(node.id)}" aria-pressed="${node.done}" aria-label="${node.done ? "Скасувати виконання" : "Завершити крок"}: ${esc(node.name)}">${node.done ? "✓" : symbol}</button>`}<div class="step-info"><div class="step-name">${group ? `<button class="icon" data-collapse="${esc(node.id)}" aria-expanded="${!node.collapsed}" aria-label="${node.collapsed ? "Розгорнути" : "Згорнути"}: ${esc(node.name)}">${node.collapsed ? "▸" : "▾"}</button>` : ""}${esc(node.name)}</div><div class="step-meta">${group ? `${done} / ${items.length} дій · ${Q.earned(node)} / ${node.xp} XP` : `${node.minutes} хв · ${node.xp} XP${node.done ? " · втілено" : ""}`}</div>${node.kind === "course" && Q.isDone(node) ? '<div class="course-award">✦ Відзнака за завершений курс</div>' : ""}</div>${tools(node, index, steps.length, depth)}${group ? `<div class="group-progress"><div class="meter"><div style="width:${Math.round((done / items.length) * 100)}%"></div></div></div>${node.collapsed ? "" : `<ul class="step-children">${renderSteps(node.children, depth + 1)}</ul>`}` : ""}</li>`;
+      return Templates.taskRow({
+        depthClass: Math.min(depth, 3),
+        doneClass: Q.isDone(node) ? "done" : "",
+        groupClass: group ? "step-group" : "",
+        id: esc(node.id),
+        depth: depth,
+        marker: group
+          ? Templates.groupCompletion({
+              id: esc(node.id),
+              pressed: node.finalized === true,
+              label: node.finalized
+                ? "Скасувати остаточне завершення"
+                : "Остаточно завершити задачу",
+              name: esc(node.name),
+              symbol: node.finalized ? "✓" : symbol,
+            })
+          : `<button class="check marker" data-toggle="${esc(node.id)}" aria-pressed="${node.done}" aria-label="${node.done ? "Скасувати виконання" : "Завершити крок"}: ${esc(node.name)}">${node.done ? "✓" : symbol}</button>`,
+        collapseButton: group
+          ? `<button class="icon" data-collapse="${esc(node.id)}" aria-expanded="${!node.collapsed}" aria-label="${node.collapsed ? "Розгорнути" : "Згорнути"}: ${esc(node.name)}">${node.collapsed ? "▸" : "▾"}</button>`
+          : "",
+        name: esc(node.name),
+        meta: group
+          ? `${done} / ${items.length} дій · ${Q.earned(node)} / ${node.xp} XP`
+          : `${node.minutes} хв · ${node.xp} XP${node.done ? " · втілено" : ""}`,
+        courseAward:
+          node.kind === "course" && Q.isDone(node)
+            ? '<div class="course-award">✦ Відзнака за завершений курс</div>'
+            : "",
+        tools: tools(node, index, steps.length, depth),
+        children: group
+          ? `<div class="group-progress"><div class="meter"><div style="width:${Math.round((done / items.length) * 100)}%"></div></div></div>${node.collapsed ? "" : `<ul class="step-children">${renderSteps(node.children, depth + 1)}</ul>`}`
+          : "",
+      });
     })
     .join("");
 }
@@ -381,30 +432,71 @@ function render() {
     )
       .map((item) => {
         const tasks = leaves(item);
-        return `<button class="${item.id === m?.id ? "active" : ""} ${Q.missionDone(item) ? "completed-mission" : ""}" data-mission="${esc(item.id)}">${state.missions.indexOf(item) + 1}. ${esc(item.name)}<span>${tasks.filter((s) => s.done).length} / ${tasks.length} дій</span></button>`;
+        return Templates.missionTab({
+          activeClass: item.id === m?.id ? "active" : "",
+          completeClass: Q.missionDone(item) ? "completed-mission" : "",
+          id: esc(item.id),
+          position: state.missions.indexOf(item) + 1,
+          name: esc(item.name),
+          done: tasks.filter((s) => s.done).length,
+          total: tasks.length,
+        });
       })
       .join("") +
     '<button id="newMission" aria-label="Додати місію">＋ Місія</button>' +
     `<button id="openArchive">Архів (${state.missions.filter((m) => m.archived).length})</button><button id="openTrash">Кошик (${(state.trash || []).filter((e) => e.deletedAt + Q.TRASH_TTL > Date.now()).length})</button>`;
   $("#mission").classList.toggle("mission-complete", !!m && Q.missionDone(m));
   $("#mission").innerHTML = m
-    ? `<div class="mission-top"><div><span class="badge">${m.deadline ? "ФІНІШ · " + esc(new Date(m.deadline + "T12:00:00").toLocaleDateString("uk-UA", { day: "numeric", month: "long" })) : "У ВЛАСНОМУ ТЕМПІ"}</span><h2><button class="check marker" id="finalizeMission" aria-pressed="${m.finalized === true}" aria-label="${m.finalized ? "Скасувати остаточне завершення" : "Остаточно завершити проєкт"}: ${esc(m.name)}">${m.finalized ? "✓" : "◇"}</button> ${state.missions.indexOf(m) + 1}. ${esc(m.name)}</h2><p class="sub" style="font-size:13px">${esc(m.goal)}</p></div><div class="section-actions"><button class="ghost small" id="archiveMission">В архів</button><button class="ghost small" id="deleteMission">Видалити проєкт</button><button class="ghost small" id="editMission">Редагувати</button><button class="ghost small" id="moveMission" ${m.steps.length ? "" : "disabled"}>Перемістити проєкт</button></div></div><div class="progress-label"><span>Шлях до результату</span><span>${done} із ${items.length} · ${items.length ? Math.round((done / items.length) * 100) : 0}%</span></div><div class="meter"><div style="width:${items.length ? (done / items.length) * 100 : 0}%"></div></div>${
-        next
-          ? `<div class="next"><div class="next-head"><span class="eyebrow">Твій наступний крок</span><span class="reward">${next.children?.length ? "Підтвердь результат · XP уже за підкроки" : `＋${next.xp} XP · ＋${number(next.xp / 5)} іскор`}</span></div><h3>${esc(next.name)}</h3><p class="focus-status">${m.focusId === next.id ? 'Обрано тобою <button class="ghost small" id="clearFocus">Повернути автовибір</button>' : "Автоматично: перша невиконана дія у списку"}</p><p><strong>Результат цього кроку:</strong> ${esc(next.result)}</p><div class="timerline"><span class="timer" id="timer">${timerStep === next.id ? formatTime(remaining) : formatTime(next.minutes * 60)}</span><select id="duration" aria-label="Тривалість сету">${[
-              ...new Set([5, 10, 15, 20, 25, next.minutes]),
-            ]
-              .sort((a, b) => a - b)
-              .map(
-                (n) =>
-                  `<option value="${n}" ${n === next.minutes ? "selected" : ""}>${n} хв</option>`,
-              )
-              .join(
-                "",
-              )}</select><button class="ghost small" id="startTimer">${interval && timerStep === next.id ? "Пауза" : "Почати сет"}</button></div><div class="actions"><button class="primary" id="completeNext">Крок виконано ✓</button><button class="ghost" id="delegate">Передати ChatGPT ↗</button><button class="ghost" id="overwhelmed">Крок завеликий</button></div><p class="hint">Бали — за результат. Підкроки ділять винагороду задачі; тривалість сету не збільшує бали.</p></div>`
+    ? Templates.missionCard({
+        deadlineLabel: m.deadline
+          ? "ФІНІШ · " +
+            esc(
+              new Date(m.deadline + "T12:00:00").toLocaleDateString("uk-UA", {
+                day: "numeric",
+                month: "long",
+              }),
+            )
+          : "У ВЛАСНОМУ ТЕМПІ",
+        pressed: m.finalized === true,
+        completionLabel: m.finalized
+          ? "Скасувати остаточне завершення"
+          : "Остаточно завершити проєкт",
+        nameForLabel: esc(m.name),
+        completionSymbol: m.finalized ? "✓" : "◇",
+        position: state.missions.indexOf(m) + 1,
+        name: esc(m.name),
+        goal: esc(m.goal),
+        moveDisabled: m.steps.length ? "" : "disabled",
+        done: done,
+        total: items.length,
+        progressLabel: items.length ? Math.round((done / items.length) * 100) : 0,
+        progressWidth: items.length ? (done / items.length) * 100 : 0,
+        nextPanel: next
+          ? Templates.nextStepPanel({
+              reward: next.children?.length
+                ? "Підтвердь результат · XP уже за підкроки"
+                : `＋${next.xp} XP · ＋${number(next.xp / 5)} іскор`,
+              name: esc(next.name),
+              focusStatus:
+                m.focusId === next.id
+                  ? 'Обрано тобою <button class="ghost small" id="clearFocus">Повернути автовибір</button>'
+                  : "Автоматично: перша невиконана дія у списку",
+              result: esc(next.result),
+              time: timerStep === next.id ? formatTime(remaining) : formatTime(next.minutes * 60),
+              durationOptions: [...new Set([5, 10, 15, 20, 25, next.minutes])]
+                .sort((a, b) => a - b)
+                .map(
+                  (n) =>
+                    `<option value="${n}" ${n === next.minutes ? "selected" : ""}>${n} хв</option>`,
+                )
+                .join(""),
+              timerLabel: interval && timerStep === next.id ? "Пауза" : "Почати сет",
+            })
           : items.length
             ? `<div class="next"><div class="eyebrow">Місію завершено ✧</div><h3>Цю вершину взято!</h3><p>Поміть, що змінилося завдяки твоїм діям.</p><button class="primary" id="celebrate">Відсвяткувати ✨</button></div>`
-            : `<div class="next"><h3>Перший крок до нової вершини</h3><p>Додай крок або створи серію лекцій.</p></div>`
-      }<div class="section-title"><h3>Маршрут місії</h3><div class="section-actions"><button class="ghost small" id="addStep">＋ Додати крок</button><button class="ghost small" id="addSeries">Створити серію</button></div></div><ul class="steps">${renderSteps(m.steps)}</ul>`
+            : `<div class="next"><h3>Перший крок до нової вершини</h3><p>Додай крок або створи серію лекцій.</p></div>`,
+        steps: renderSteps(m.steps),
+      })
     : '<h2>Немає активних проєктів</h2><p class="note">Створи місію або поверни проєкт з архіву.</p>';
   $("#level").textContent =
     `Рівень ${Math.floor(xp / 200) + 1} · ${xp < 200 ? "Іскра наміру" : xp < 600 ? "Сила втілення" : "Світло впливу"}`;
@@ -449,7 +541,17 @@ function render() {
     );
     $("#allArtifacts").onclick = () =>
       modal(
-        `<h2>Твоя колекція</h2><div class="artifacts">${rewards.unlocked.map((r) => `<div class="artifact unlocked"><b>${r.icon}</b><span>${esc(r.name)}</span></div>`).join("")}${courses.map((c) => `<div class="artifact unlocked"><b>✦</b><span>${esc(c.name)}</span></div>`).join("")}</div><div class="dialog-actions"><button data-close>Закрити</button></div>`,
+        Templates.artifactCollection({
+          rewards: rewards.unlocked
+            .map(
+              (r) =>
+                `<div class="artifact unlocked"><b>${r.icon}</b><span>${esc(r.name)}</span></div>`,
+            )
+            .join(""),
+          courses: courses
+            .map((c) => `<div class="artifact unlocked"><b>✦</b><span>${esc(c.name)}</span></div>`)
+            .join(""),
+        }),
       );
   }
   bind();
@@ -477,7 +579,30 @@ function stepEditor(id, { copyId = null, parentId = null } = {}) {
     allocated = !!(parent || match?.parent),
     locked = !!(s && Q.hasDone(s));
   modal(
-    `<h2>${source ? "Скопіювати крок" : parentId ? "Новий підкрок" : s ? "Редагувати крок" : "Новий крок"}</h2>${parent ? `<p class="note">До задачі «${esc(parent.name)}». Підкроки ділять її ${parent.xp} XP. Зароблені частки зберігаються; нові дії ділять залишок.</p>` : ""}<form id="stepForm"><label for="stepName">Назва дії</label><input id="stepName" required maxlength="500" value="${esc(draft?.name || "")}"><label for="stepResult">Що має бути готово</label><textarea id="stepResult" required maxlength="10000">${esc(draft?.result || "")}</textarea><label for="stepMinutes">Сет, хвилин</label><input id="stepMinutes" type="number" min="1" max="120" required value="${draft?.minutes || 10}">${allocated ? '<p class="note">Бали підкроку визначаються загальною винагородою задачі.</p>' : `<label for="stepXP">Внесок у результат</label><select id="stepXP" ${locked ? "disabled" : ""}>${xpOptions(draft?.xp || 50)}</select><p class="note">Початкова шкала: 25 / 50 / 100 / 200 XP. Важливіший результат — більша винагорода.${locked ? " Щоб змінити бали, спочатку скасуй виконання дій цієї задачі." : ""}</p>`}<div class="dialog-actions"><button type="button" data-close>Скасувати</button><button class="primary">Зберегти</button></div></form>`,
+    Templates.stepForm({
+      title: source
+        ? "Скопіювати крок"
+        : parentId
+          ? "Новий підкрок"
+          : s
+            ? "Редагувати крок"
+            : "Новий крок",
+      parentNote: parent
+        ? `<p class="note">До задачі «${esc(parent.name)}». Підкроки ділять її ${parent.xp} XP. Зароблені частки зберігаються; нові дії ділять залишок.</p>`
+        : "",
+      name: esc(draft?.name || ""),
+      result: esc(draft?.result || ""),
+      minutes: draft?.minutes || 10,
+      rewardField: allocated
+        ? '<p class="note">Бали підкроку визначаються загальною винагородою задачі.</p>'
+        : Templates.stepRewardField({
+            disabled: locked ? "disabled" : "",
+            options: xpOptions(draft?.xp || 50),
+            lockedNote: locked
+              ? " Щоб змінити бали, спочатку скасуй виконання дій цієї задачі."
+              : "",
+          }),
+    }),
   );
   $("#stepForm").onsubmit = (e) => {
     e.preventDefault();
@@ -516,9 +641,7 @@ function stepEditor(id, { copyId = null, parentId = null } = {}) {
   };
 }
 function seriesEditor() {
-  modal(
-    `<h2>Створити серію</h2><p class="note">Курс → лекції → дії. За весь курс — окрема відзнака; XP нараховуються лише за дії.</p><form id="seriesForm"><label for="courseName">Назва курсу або великої задачі</label><input id="courseName" required maxlength="500" placeholder="Пройти курс COO"><div class="form-grid"><div><label for="lectureCount">Кількість лекцій</label><input id="lectureCount" type="number" min="1" max="100" value="15" required></div><div><label for="lectureXP">Винагорода за одну лекцію</label><select id="lectureXP">${xpOptions(50)}</select></div></div><label for="lectureTemplate">Шаблон назви: {n} — номер</label><input id="lectureTemplate" required value="Лекція {n}" maxlength="500"><label for="lectureActions">Дії для кожної лекції — по одній у рядку</label><textarea id="lectureActions" required>Переглянути\nЗробити нотатки / опрацювати матеріали</textarea><label for="seriesMinutes">Сет для дії, хвилин</label><input id="seriesMinutes" type="number" min="1" max="120" value="20" required><p class="note" id="seriesSummary"></p><div class="dialog-actions"><button type="button" data-close>Скасувати</button><button class="primary">Створити серію</button></div></form>`,
-  );
+  modal(Templates.seriesForm({ xpOptions: xpOptions(50) }));
   function summary() {
     const n = Number($("#lectureCount").value) || 0;
     $("#seriesSummary").textContent =
@@ -587,7 +710,12 @@ function seriesEditor() {
 function missionEditor(isNew = false) {
   const m = isNew ? {} : mission();
   modal(
-    `<h2>${isNew ? "Нова місія" : "Налаштування місії"}</h2><form id="missionForm"><label for="missionName">Назва</label><input id="missionName" required maxlength="500" value="${esc(m.name || "")}"><label for="missionGoal">Бажаний результат</label><textarea id="missionGoal" required>${esc(m.goal || "")}</textarea><label for="missionDeadline">Орієнтовний фініш</label><input id="missionDeadline" type="date" value="${esc(m.deadline || "")}"><div class="dialog-actions"><button type="button" data-close>Скасувати</button><button class="primary">Зберегти</button></div></form>`,
+    Templates.missionForm({
+      title: isNew ? "Нова місія" : "Налаштування місії",
+      name: esc(m.name || ""),
+      goal: esc(m.goal || ""),
+      deadline: esc(m.deadline || ""),
+    }),
   );
   $("#missionForm").onsubmit = (e) => {
     e.preventDefault();
@@ -658,7 +786,24 @@ function deleteProject(id) {
 function showTrash() {
   const entries = (state.trash || []).filter((e) => e.deletedAt + Q.TRASH_TTL > Date.now());
   modal(
-    `<h2>Кошик</h2><p class="note">Видалені елементи зберігаються 7 днів. Бали повертаються разом із відновленими діями.</p>${entries.length ? entries.map((e) => `<div class="archive-item"><h3>${esc(e.node.name)}</h3><p class="note">${e.kind === "project" ? "Проєкт" : `Крок · ${esc(e.missionName)}${e.parentName ? " → " + esc(e.parentName) : ""}`}<br>Видалено: ${new Date(e.deletedAt).toLocaleString("uk-UA")}<br>Зберігається до: ${new Date(e.deletedAt + Q.TRASH_TTL).toLocaleString("uk-UA")}</p><button data-trash-restore="${esc(e.id)}">Відновити</button></div>`).join("") : "<p>Кошик порожній.</p>"}<p class="note">Елементи, видалені до появи кошика, можуть залишитися в попередніх копіях у розділі «Дані».</p><div class="dialog-actions"><button data-close>Закрити</button></div>`,
+    Templates.trashDialog({
+      entries: entries.length
+        ? entries
+            .map((e) =>
+              Templates.trashEntry({
+                name: esc(e.node.name),
+                kind:
+                  e.kind === "project"
+                    ? "Проєкт"
+                    : `Крок · ${esc(e.missionName)}${e.parentName ? " → " + esc(e.parentName) : ""}`,
+                deletedAt: new Date(e.deletedAt).toLocaleString("uk-UA"),
+                expiresAt: new Date(e.deletedAt + Q.TRASH_TTL).toLocaleString("uk-UA"),
+                id: esc(e.id),
+              }),
+            )
+            .join("")
+        : "<p>Кошик порожній.</p>",
+    }),
   );
   $$("[data-trash-restore]").forEach(
     (b) =>
@@ -675,7 +820,22 @@ function showTrash() {
 function showArchive() {
   const archived = state.missions.filter((m) => m.archived);
   modal(
-    `<h2>Архів</h2>${archived.length ? archived.map((m) => `<div class="archive-item"><h3>${esc(m.name)}</h3><p class="note">${leaves(m).length} дій · ${m.steps.reduce((sum, n) => sum + Q.earned(n), 0)} XP</p><div class="actions"><button data-view-archive="${esc(m.id)}">Переглянути</button><button data-restore="${esc(m.id)}">Повернути в активні</button><button data-delete-project="${esc(m.id)}">Видалити</button></div></div>`).join("") : "<p>Архів поки порожній.</p>"}<div class="dialog-actions"><button data-close>Закрити</button></div>`,
+    Templates.archiveDialog({
+      entries: archived.length
+        ? archived
+            .map((m) =>
+              Templates.archiveEntry({
+                name: esc(m.name),
+                actionsCount: leaves(m).length,
+                xp: m.steps.reduce((sum, n) => sum + Q.earned(n), 0),
+                viewId: esc(m.id),
+                restoreId: esc(m.id),
+                deleteId: esc(m.id),
+              }),
+            )
+            .join("")
+        : "<p>Архів поки порожній.</p>",
+    }),
   );
   $$("[data-view-archive]").forEach((b) => (b.onclick = () => viewArchive(b.dataset.viewArchive)));
   $$("[data-restore]").forEach((b) => (b.onclick = () => restoreProject(b.dataset.restore)));
@@ -700,9 +860,7 @@ function delegate() {
     s = nextStep();
   if (!s) return;
   const prompt = `Допоможи виконати крок моєї місії «${m.name}».\nЗагальний результат: ${m.goal}\nПоточний крок: ${s.name}\nОчікую отримати: ${s.result}\n\nВізьми на себе максимум підготовчої та виконавчої роботи. Спочатку коротко вкажи, що зробиш сам і яке одне рішення або матеріал потрібні від мене. Не вигадуй факти; використовуй актуальні файли, якщо вони доступні. Працюй до конкретного результату, придатного до перевірки. Мій сет участі — ${s.minutes} хвилин. Якщо задача більша, виділи найменший завершений результат і познач залишок.\n\nМої матеріали / уточнення: `;
-  modal(
-    `<h2>Передати роботу ChatGPT</h2><p class="note">Скопіюй запит у чат і додай матеріали. Ця кнопка готує передачу; робота почнеться в чаті.</p><label for="promptText">Запит</label><textarea id="promptText" style="min-height:260px">${esc(prompt)}</textarea><div class="dialog-actions"><button data-close>Закрити</button><button class="primary" id="copyPrompt">Скопіювати запит</button></div>`,
-  );
+  modal(Templates.delegateDialog({ prompt: esc(prompt) }));
   $("#copyPrompt").onclick = () => copyText($("#promptText"));
 }
 function transferEditor(sourceId) {
@@ -729,7 +887,12 @@ function transferEditor(sourceId) {
     visit(m.steps);
   }
   modal(
-    `<h2>Перемістити ${whole ? "проєкт" : "задачу"}</h2><p>${esc(node.name)}</p><p class="note">Разом із підкроками та виконанням. Уже зароблені XP не зміняться. ${whole ? "Проєкт після перенесення стане задачею всередині обраного місця." : ""}</p><label for="transferTarget">Куди перемістити</label><select id="transferTarget"><option value="">Обери місце</option>${options.map((o, i) => `<option value="${i}">${esc(o.label)}</option>`).join("")}</select><p class="note" id="transferPreview"></p><p class="inline-error" id="transferError" role="alert"></p><div class="dialog-actions"><button data-close>Скасувати</button><button class="primary" id="confirmTransfer" disabled>Перемістити</button></div>`,
+    Templates.transferForm({
+      kind: whole ? "проєкт" : "задачу",
+      name: esc(node.name),
+      projectNote: whole ? "Проєкт після перенесення стане задачею всередині обраного місця." : "",
+      options: options.map((o, i) => `<option value="${i}">${esc(o.label)}</option>`).join(""),
+    }),
   );
   if (!options.length)
     $("#transferPreview").textContent =
@@ -900,7 +1063,11 @@ function showData() {
   const text = JSON.stringify(state, null, 2);
   exportURL = URL.createObjectURL(new Blob([text], { type: "application/json;charset=utf-8" }));
   modal(
-    `<h2>Твої дані</h2><p class="note">Прогрес зберігається в цьому браузері. Для перенесення між пристроями збережи JSON, потім завантаж його на іншому пристрої.</p><h3>Зберегти копію</h3><a class="file-download" id="export" download="${backupFilename(new Date().toISOString()).replace("backup", "progress")}" href="${exportURL}">Зберегти JSON-файл ↓</a><details><summary>Якщо файл не зберігається — скопіювати JSON</summary><textarea class="data-text" id="exportText" readonly aria-label="JSON для копіювання">${esc(text)}</textarea><button class="small" id="copyJSON">Скопіювати JSON</button></details><h3>Завантажити збережений прогрес</h3><label for="importFile">Обрати файл прогресу (.json)</label><input class="file-input" type="file" id="importFile" aria-describedby="fileHelp"><p class="note" id="fileHelp">Натисни стандартну кнопку вибору файла вище. Якщо вбудований переглядач не відкриває вікно вибору, відкрий цю адресу у Chrome через меню переглядача або встав JSON текстом нижче. В іншому браузері прогрес зберігається окремо.</p><details><summary>Або вставити JSON текстом</summary><label for="importText">JSON із твоєї копії</label><textarea class="data-text" id="importText" placeholder="Встав сюди вміст файла"></textarea><button class="small" id="readJSON">Перевірити JSON</button></details><p class="inline-error" id="importError" role="alert"></p><div id="importPreview"></div><p class="note" id="dataStatus"></p><div class="dialog-actions"><button data-close>Закрити</button></div>`,
+    Templates.dataDialog({
+      filename: backupFilename(new Date().toISOString()).replace("backup", "progress"),
+      url: exportURL,
+      json: esc(text),
+    }),
   );
   $("#export").onclick = () => {
     $("#dataStatus").textContent =
@@ -959,8 +1126,11 @@ function prepareImport(text) {
       imported.active = imported.missions[0]?.id || null;
     const tasks = imported.missions.flatMap(leaves);
     $("#importError").textContent = "";
-    $("#importPreview").innerHTML =
-      `<div class="import-preview"><strong>Файл перевірено</strong><p class="note">Місій: ${imported.missions.length}. Дій: ${tasks.length}. Виконано: ${tasks.filter((s) => s.done).length}.<br>Це замінить поточний прогрес у цьому браузері. Перед заміною буде збережено локальну копію.</p><button class="primary small" id="confirmImport">Замінити прогрес цими даними</button></div>`;
+    $("#importPreview").innerHTML = Templates.importPreview({
+      missions: imported.missions.length,
+      actions: tasks.length,
+      done: tasks.filter((s) => s.done).length,
+    });
     $("#confirmImport").onclick = () => {
       try {
         const current = localStorage.getItem(KEY);
@@ -995,9 +1165,7 @@ $("#theme").onclick = () => {
 };
 $("#settings").onclick = showData;
 $("#checkin").onclick = () => {
-  modal(
-    '<h2>Почнемо з посильного.</h2><p>Скільки уваги зараз є для одного кроку?</p><div class="actions"><button data-energy="5">5 хв · м’який старт</button><button data-energy="10">10 хв · у роботу</button><button data-energy="20">20 хв · є ресурс</button></div><p class="note">Обери один результат. Підготовку можна передати через «Передати ChatGPT».</p><div class="dialog-actions"><button data-close>Закрити</button></div>',
-  );
+  modal(Templates.checkinDialog());
   $$("[data-energy]").forEach(
     (b) =>
       (b.onclick = () => {
