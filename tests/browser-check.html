@@ -193,6 +193,11 @@
     click(f, '[data-edit="next"]');
     assert(!d.querySelector("#deleteStep"), "Delete still in editor");
     outside(f);
+    click(f, '#startTimer');
+    assert(d.querySelector('#startTimer').textContent === 'Пауза', 'Timer did not start');
+    assert(d.querySelector('#xp').textContent === '25 / 200 XP', 'Timer awarded XP');
+    click(f, '#startTimer');
+    assert(d.querySelector('#startTimer').textContent === 'Почати сет', 'Timer did not pause');
     click(f, '[data-toggle="next"]');
     assert(d.querySelector("#xp").textContent === "50 / 200 XP", "Incorrect XP after toggle");
     click(f, '[data-toggle="next"]');
